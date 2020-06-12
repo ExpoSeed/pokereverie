@@ -22960,26 +22960,6 @@ const struct BaseStats gBaseStats[] =
 
     [SPECIES_ALOLAN_GRAVELER] =
     {
-<<<<<<< HEAD
-        .baseHP        = 68,
-        .baseAttack    = 65,
-        .baseDefense   = 65,
-        .baseSpeed     = 80,
-        .baseSpAttack  = 125,
-        .baseSpDefense = 115,
-        .type1 = TYPE_PSYCHIC,
-        .type2 = TYPE_FAIRY,
-        .catchRate = 45,
-        .expYield = 208,
-        .evYield_HP        = 0,
-        .evYield_Attack    = 0,
-        .evYield_Defense   = 0,
-        .evYield_Speed     = 0,
-        .evYield_SpAttack  = 3,
-        .evYield_SpDefense = 0,
-        .item1 = ITEM_NONE,
-        .item2 = ITEM_NONE,
-=======
         .baseHP        = 55,
         .baseAttack    = 95,
         .baseDefense   = 115,
@@ -22993,7 +22973,6 @@ const struct BaseStats gBaseStats[] =
         .evYield_Defense   = 2,
         .evYield_SpAttack  = 0,
         .item2 = ITEM_CELL_BATTERY,
->>>>>>> dd30ae34812f18ad30dbccc2d409188337273d3a
         .genderRatio = PERCENT_FEMALE(50),
         .eggCycles = 15,
         .friendship = 70,
