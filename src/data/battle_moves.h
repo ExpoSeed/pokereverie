@@ -7671,7 +7671,7 @@ const struct BattleMove gBattleMoves[MOVES_COUNT] =
 
     [MOVE_RELIC_SONG] =
     {
-        .effect = EFFECT_SLEEP,
+        .effect = EFFECT_SLEEP_HIT,
         .power = 75,
         .type = TYPE_NORMAL,
         .accuracy = 100,
@@ -9012,7 +9012,7 @@ const struct BattleMove gBattleMoves[MOVES_COUNT] =
 
     [MOVE_LUNGE] =
     {
-        .effect = EFFECT_ATTACK_DOWN,
+        .effect = EFFECT_ATTACK_DOWN_HIT,
         .power = 80,
         .type = TYPE_BUG,
         .accuracy = 100,
@@ -9026,7 +9026,7 @@ const struct BattleMove gBattleMoves[MOVES_COUNT] =
 
     [MOVE_FIRE_LASH] =
     {
-        .effect = EFFECT_DEFENSE_DOWN,
+        .effect = EFFECT_DEFENSE_DOWN_HIT,
         .power = 80,
         .type = TYPE_FIRE,
         .accuracy = 100,
