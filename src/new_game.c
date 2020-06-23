@@ -206,6 +206,7 @@ void NewGameInitData(void)
     WipeTrainerNameRecords();
     ResetTrainerHillResults();
     ResetContestLinkResults();
+    gSaveBlock1Ptr->scaledLevel = 5;
 }
 
 static void ResetMiniGamesResults(void)

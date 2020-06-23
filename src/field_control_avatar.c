@@ -202,7 +202,7 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
     if (input->input_field_1_2)
     {
         PlaySE(SE_WIN_OPEN);
-        Debug_ShowMainMenu();
+        SetMainCallback2(CB2_DebugMenu);
         return TRUE;
     }
 #endif

@@ -2,7 +2,7 @@
 #define GUARD_DEBUG_H
 #if DEBUG
 
-void Debug_ShowMainMenu(void);
+void CB2_DebugMenu(void);
 
 #endif
 #endif // GUARD_DEBUG_H
