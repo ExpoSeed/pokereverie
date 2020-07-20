@@ -46,12 +46,77 @@ struct TrainerMonItemCustomMoves
     u16 moves[MAX_MON_MOVES];
 };
 
+struct ScaledItem
+{
+    u16 id;
+    u8 minLvl;
+};
+
+struct ScaledMove
+{
+    u16 id;
+    u8 minLvl;
+};
+
+struct ScaledSpecies
+{
+    u16 id;
+    u8 minLvl;
+};
+
+struct TrainerMonScaledNoItemDefaultMoves
+{
+    const struct ScaledSpecies *speciesList;
+    u16 iv;
+    u8 speciesCount;
+    s8 levelOffset;
+    u8 disallowAttackingMoveTypeOverlap:1;
+};
+
+struct TrainerMonScaledNoItemCustomMoves
+{
+    const struct ScaledSpecies *speciesList;
+    const struct ScaledMove *moveList;
+    u16 iv;
+    u8 speciesCount;
+    u8 moveCount;
+    s8 levelOffset;
+    u8 disallowAttackingMoveTypeOverlap:1;
+};
+
+struct TrainerMonScaledItemDefaultMoves
+{
+    const struct ScaledSpecies *speciesList;
+    const struct ScaledItem *heldItemList;
+    u16 iv;
+    u8 speciesCount;
+    u8 heldItemCount;
+    s8 levelOffset;
+    u8 disallowAttackingMoveTypeOverlap:1;
+};
+
+struct TrainerMonScaledItemCustomMoves
+{
+    const struct ScaledSpecies *speciesList;
+    const struct ScaledItem *heldItemList;
+    const struct ScaledMove *moveList;
+    u16 iv;
+    u8 speciesCount;
+    u8 heldItemCount;
+    u8 moveCount;
+    s8 levelOffset;
+    u8 disallowAttackingMoveTypeOverlap:1;
+};
 union TrainerMonPtr
 {
     const struct TrainerMonNoItemDefaultMoves *NoItemDefaultMoves;
     const struct TrainerMonNoItemCustomMoves *NoItemCustomMoves;
     const struct TrainerMonItemDefaultMoves *ItemDefaultMoves;
     const struct TrainerMonItemCustomMoves *ItemCustomMoves;
+    const struct TrainerMonScaledNoItemDefaultMoves *ScaledNoItemDefaultMoves;
+    const struct TrainerMonScaledNoItemCustomMoves *ScaledNoItemCustomMoves;
+    const struct TrainerMonScaledItemDefaultMoves *ScaledItemDefaultMoves;
+    const struct TrainerMonScaledItemCustomMoves *ScaledItemCustomMoves;
 };
 
 struct Trainer
