@@ -63,7 +63,6 @@
 #include "constants/species.h"
 #include "constants/moves.h"
 #include "constants/party_menu.h"
-#include "constants/vars.h"
 #include "constants/battle_frontier.h"
 #include "constants/weather.h"
 #include "constants/metatile_labels.h"
@@ -2642,7 +2641,7 @@ static void Task_ShowScrollableMultichoice(u8 taskId)
 
     ScrollableMultichoice_UpdateScrollArrows(taskId);
     task->tListTaskId = ListMenuInit(&gScrollableMultichoice_ListMenuTemplate, task->tScrollOffset, task->tSelectedRow);
-    schedule_bg_copy_tilemap_to_vram(0);
+    ScheduleBgCopyTilemapToVram(0);
     gTasks[taskId].func = ScrollableMultichoice_ProcessInput;
 }
 
@@ -2855,7 +2854,7 @@ void SetBattleTowerLinkPlayerGfx(void)
 
 void ShowNatureGirlMessage(void)
 {
-    static const u8 *const sNatureGirlMessages[] = {
+    static const u8 *const sNatureGirlMessages[NUM_NATURES] = {
         [NATURE_HARDY]   = BattleFrontier_Lounge5_Text_NatureGirlHardy,
         [NATURE_LONELY]  = BattleFrontier_Lounge5_Text_NatureGirlLonely,
         [NATURE_BRAVE]   = BattleFrontier_Lounge5_Text_NatureGirlBrave,
@@ -3688,7 +3687,7 @@ void Unused_SetWeatherSunny(void)
     SetCurrentAndNextWeather(WEATHER_SUNNY);
 }
 
-// Always returns 1
+// All mart employees have a local id of 1, so function always returns 1
 u32 GetMartEmployeeObjectEventId(void)
 {
     static const u8 sPokeMarts[][3] =
@@ -4095,11 +4094,17 @@ void UpdateTrainerFanClubGameClear(void)
 }
 
 // If the player has < 3 fans, gain a new fan whenever the counter reaches 20+
-// Defeating Drake or participating in a Link Contest increments the counter by 2
+// Defeating Drake or participating in a Contest increments the counter by 2 
 // Participating at Battle Tower or in a Secret Base battle increments the counter by 1
 u8 TryGainNewFanFromCounter(u8 incrementId)
 {
-    static const u8 sCounterIncrements[] = { 2, 1, 2, 1 };
+    static const u8 sCounterIncrements[] = 
+    { 
+        [FANCOUNTER_DEFEATED_DRAKE]    = 2, 
+        [FANCOUNTER_BATTLED_AT_BASE]   = 1, 
+        [FANCOUNTER_FINISHED_CONTEST]  = 2, 
+        [FANCOUNTER_USED_BATTLE_TOWER] = 1 
+    };
 
     if (VarGet(VAR_LILYCOVE_FAN_CLUB_STATE) == 2)
     {
