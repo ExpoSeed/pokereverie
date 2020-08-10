@@ -46,12 +46,90 @@ struct TrainerMonItemCustomMoves
     u16 moves[MAX_MON_MOVES];
 };
 
+struct ScaledItem
+{
+    u16 id;
+    u8 minLvl;
+};
+
+struct ScaledMove
+{
+    u16 id;
+    u8 minLvl;
+};
+
+struct ScaledSpeciesRandomAbility
+{
+    u16 id;
+    u8 minLvl;
+};
+
+struct ScaledSpeciesCustomAbility
+{
+    u16 id;
+    u8 minLvl;
+    u8 abilityNum:2;
+};
+
+union ScaledSpeciesPtr
+{
+    const struct ScaledSpeciesRandomAbility *RandomAbility;
+    const struct ScaledSpeciesCustomAbility *CustomAbility;
+};
+
+struct TrainerMonScaledNoItemDefaultMoves
+{
+    union ScaledSpeciesPtr speciesList;
+    u16 iv;
+    u8 speciesCount;
+    s8 levelOffset;
+    u8 disallowAttackingMoveTypeOverlap:1;
+};
+
+struct TrainerMonScaledNoItemCustomMoves
+{
+    union ScaledSpeciesPtr speciesList;
+    const struct ScaledMove *moveList;
+    u16 iv;
+    u8 speciesCount;
+    u8 moveCount;
+    s8 levelOffset;
+    u8 disallowAttackingMoveTypeOverlap:1;
+};
+
+struct TrainerMonScaledItemDefaultMoves
+{
+    union ScaledSpeciesPtr speciesList;
+    const struct ScaledItem *heldItemList;
+    u16 iv;
+    u8 speciesCount;
+    u8 heldItemCount;
+    s8 levelOffset;
+    u8 disallowAttackingMoveTypeOverlap:1;
+};
+
+struct TrainerMonScaledItemCustomMoves
+{
+    union ScaledSpeciesPtr speciesList;
+    const struct ScaledItem *heldItemList;
+    const struct ScaledMove *moveList;
+    u16 iv;
+    u8 speciesCount;
+    u8 heldItemCount;
+    u8 moveCount;
+    s8 levelOffset;
+    u8 disallowAttackingMoveTypeOverlap:1;
+};
 union TrainerMonPtr
 {
     const struct TrainerMonNoItemDefaultMoves *NoItemDefaultMoves;
     const struct TrainerMonNoItemCustomMoves *NoItemCustomMoves;
     const struct TrainerMonItemDefaultMoves *ItemDefaultMoves;
     const struct TrainerMonItemCustomMoves *ItemCustomMoves;
+    const struct TrainerMonScaledNoItemDefaultMoves *ScaledNoItemDefaultMoves;
+    const struct TrainerMonScaledNoItemCustomMoves *ScaledNoItemCustomMoves;
+    const struct TrainerMonScaledItemDefaultMoves *ScaledItemDefaultMoves;
+    const struct TrainerMonScaledItemCustomMoves *ScaledItemCustomMoves;
 };
 
 struct Trainer
