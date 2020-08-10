@@ -1912,316 +1912,213 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
                 }
                 break;
             }
-            case F_TRAINER_PARTY_SCALED:
-            {
-                const struct TrainerMonScaledNoItemDefaultMoves *partyData = gTrainers[trainerNum].party.ScaledNoItemDefaultMoves;
-                const struct ScaledSpecies *scaledSpecies = partyData[i].speciesList;
-                u16 species = SPECIES_NONE;
-                
-                for (j = 0; j < partyData[i].speciesCount; j++) 
-                {
-                    if (gSaveBlock1Ptr->scaledLevel >= scaledSpecies[j].minLvl)
-                    {
-                        species = scaledSpecies[j].id;
-                        break;
-                    }
-                }
-                if (species == SPECIES_NONE)
-                {
-                    // TODO: handle none case
-                    break;
-                }
-
-                for (j = 0; gSpeciesNames[species][j] != EOS; j++)
-                    nameHash += gSpeciesNames[species][j];
-
-                personalityValue += nameHash << 8;
-                fixedIV = partyData[i].iv * 31 / 255;
-                CreateMon(&party[i], species, gSaveBlock1Ptr->scaledLevel + partyData[i].levelOffset, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
-                break;
+            
             }
-            case F_TRAINER_PARTY_CUSTOM_MOVESET | F_TRAINER_PARTY_SCALED:
+
+            if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_SCALED)
             {
-                const struct TrainerMonScaledNoItemCustomMoves *partyData = gTrainers[trainerNum].party.ScaledNoItemCustomMoves;
-                const struct ScaledSpecies *scaledSpecies = partyData[i].speciesList;
-                const struct ScaledMove *scaledMoves = partyData[i].moveList;
+                union ScaledSpeciesPtr scaledSpecies;
+                const struct ScaledItem *scaledItem;
+                const struct ScaledMove *scaledMoves;
+                u16 iv;
+                u8 speciesCount;
+                u8 heldItemCount;
+                u8 moveCount;
+                s8 levelOffset;
+                u8 disallowAttackingMoveTypeOverlap;
                 u16 species = SPECIES_NONE;
-                u8 setMoves = 0;
-                u8 moveState = 0;
-                
-                for (j = 0; j < partyData[i].speciesCount; j++) 
-                {
-                    if (gSaveBlock1Ptr->scaledLevel >= scaledSpecies[j].minLvl)
-                    {
-                        species = scaledSpecies[j].id;
-                        break;
-                    }
-                }
-                if (species == SPECIES_NONE)
-                {
-                    // TODO: handle none case
-                    break;
-                }
-
-                for (j = 0; gSpeciesNames[species][j] != EOS; j++)
-                    nameHash += gSpeciesNames[species][j];
-
-                personalityValue += nameHash << 8;
-                fixedIV = partyData[i].iv * 31 / 255;
-                CreateMon(&party[i], species, gSaveBlock1Ptr->scaledLevel + partyData[i].levelOffset, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
-                
-                j = 0;
-                while (j < partyData->moveCount && setMoves != 0x0F)
-                {
-                    u8 k;
-                    switch (moveState)
-                    {
-                    case 0: // check if move can be learned
-                        if (gSaveBlock1Ptr->scaledLevel < scaledMoves[j].minLvl)
-                            moveState += 10;
-                        moveState++;
-                        break;
-                    case 1: // check if mon already has move
-                        for (k = 0; k < MAX_MON_MOVES; k++)
-                        {
-                            if (GetMonData(&party[i], MON_DATA_MOVE1 + k) == scaledMoves[j].id)
-                            {
-                                setMoves |= (1 << k);
-                                moveState += 10;
-                                break;
-                            }
-                        }
-                        moveState++;
-                        break;
-                    case 2: // if possible, teach to empty moveslot
-                        for (k = 0; k < MAX_MON_MOVES; k++)
-                        {
-                            if (GetMonData(&party[i], MON_DATA_MOVE1 + k) == MOVE_NONE)
-                            {
-                                SetMonData(&party[i], MON_DATA_MOVE1 + k, &scaledMoves[j].id);
-                                SetMonData(&party[i], MON_DATA_PP1 + k, &gBattleMoves[scaledMoves[j].id].pp);
-                                setMoves |= (1 << k);
-                                moveState += 10;
-                                break;
-                            }
-                        }
-                        moveState++;
-                        break;
-                    case 3: // check for attacking move with the same type
-                        for (k = 0; k < MAX_MON_MOVES && partyData->disallowAttackingMoveTypeOverlap; k++)
-                        {
-                            if (setMoves & (1 << k) &&
-                                gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].split != SPLIT_STATUS &&
-                                gBattleMoves[scaledMoves[j].id].split != SPLIT_STATUS &&
-                                gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].type == gBattleMoves[scaledMoves[j].id].type)
-                            {
-                                moveState += 10;
-                                break;
-                            }
-                        }
-                        moveState++;
-                        break;
-                    case 4: // if possible, replace attacking move with same type of lower priority
-                        for (k = 0; k < MAX_MON_MOVES && partyData->disallowAttackingMoveTypeOverlap; k++)
-                        {
-                            if (!(setMoves & (1 << k)) &&
-                                gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].split != SPLIT_STATUS &&
-                                gBattleMoves[scaledMoves[j].id].split != SPLIT_STATUS &&
-                                gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].type == gBattleMoves[scaledMoves[j].id].type)
-                            {
-                                SetMonData(&party[i], MON_DATA_MOVE1 + k, &scaledMoves[j].id);
-                                SetMonData(&party[i], MON_DATA_PP1 + k, &gBattleMoves[scaledMoves[j].id].pp);
-                                setMoves |= (1 << k);
-                                moveState += 10;
-                                break;
-                            }
-                        }
-                        moveState++;
-                        break;
-                    case 5: // replace oldest level up move
-                        for (k = 0; k < MAX_MON_MOVES; k++)
-                        {
-                            if (!(setMoves & (1 << k)))
-                            {
-                                SetMonData(&party[i], MON_DATA_MOVE1 + k, &scaledMoves[j].id);
-                                SetMonData(&party[i], MON_DATA_PP1 + k, &gBattleMoves[scaledMoves[j].id].pp);
-                                setMoves |= (1 << k);
-                                break;
-                            }
-                        }
-                        // fall through
-                    default: // next move
-                        moveState = 0;
-                        j++;
-                        break;
-                    }
-                }
-                break;
-            }
-            case F_TRAINER_PARTY_HELD_ITEM | F_TRAINER_PARTY_SCALED:
-            {
-                const struct TrainerMonScaledItemDefaultMoves *partyData = gTrainers[trainerNum].party.ScaledItemDefaultMoves;
-                const struct ScaledSpecies *scaledSpecies = partyData[i].speciesList;
-                const struct ScaledItem *scaledItem = partyData[i].heldItemList;
-                u16 species = SPECIES_NONE;
-                u16 heldItem = ITEM_NONE;
-                
-                for (j = 0; j < partyData[i].speciesCount; j++) 
-                {
-                    if (gSaveBlock1Ptr->scaledLevel >= scaledSpecies[j].minLvl)
-                    {
-                        species = scaledSpecies[j].id;
-                        break;
-                    }
-                }
-                if (species == SPECIES_NONE)
-                {
-                    // TODO: handle none case
-                    break;
-                }
-
-                for (j = 0; gSpeciesNames[species][j] != EOS; j++)
-                    nameHash += gSpeciesNames[species][j];
-
-                personalityValue += nameHash << 8;
-                fixedIV = partyData[i].iv * 31 / 255;
-                CreateMon(&party[i], species, gSaveBlock1Ptr->scaledLevel + partyData[i].levelOffset, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
-                
-                for (j = 0; j < partyData[i].heldItemCount; j++) 
-                {
-                    if (gSaveBlock1Ptr->scaledLevel >= scaledItem[j].minLvl)
-                        heldItem = scaledItem[j].id;
-                }
-                SetMonData(&party[i], MON_DATA_HELD_ITEM, &heldItem);
-                break;
-            }
-            case F_TRAINER_PARTY_CUSTOM_MOVESET | F_TRAINER_PARTY_HELD_ITEM | F_TRAINER_PARTY_SCALED:
-            {
-                const struct TrainerMonScaledItemCustomMoves *partyData = gTrainers[trainerNum].party.ScaledItemCustomMoves;
-                const struct ScaledSpecies *scaledSpecies = partyData[i].speciesList;
-                const struct ScaledItem *scaledItem = partyData[i].heldItemList;
-                const struct ScaledMove *scaledMoves = partyData[i].moveList;
-                u16 species = SPECIES_NONE;
+                u8 abilityNum;
                 u16 heldItem = ITEM_NONE;
                 u8 setMoves = 0;
                 u8 moveState = 0;
                 
-                for (j = 0; j < partyData[i].speciesCount; j++) 
+                // initialize all the data properly and avoid gamefreak's stupid copy pasted switch case
+                if (gTrainers[trainerNum].partyFlags & (F_TRAINER_PARTY_HELD_ITEM | F_TRAINER_PARTY_CUSTOM_MOVESET))
                 {
-                    if (gSaveBlock1Ptr->scaledLevel >= scaledSpecies[j].minLvl)
+                    const struct TrainerMonScaledItemCustomMoves *partyData = gTrainers[trainerNum].party.ScaledItemCustomMoves;
+                    iv = partyData[i].iv;
+                    speciesCount = partyData[i].speciesCount;
+                    scaledSpecies = partyData[i].speciesList;
+                    levelOffset = partyData[i].levelOffset;
+                    heldItemCount = partyData[i].heldItemCount;
+                    scaledItem = partyData[i].heldItemList;
+                    moveCount = partyData[i].moveCount;
+                    scaledMoves = partyData[i].moveList;
+                    disallowAttackingMoveTypeOverlap = partyData[i].disallowAttackingMoveTypeOverlap;
+                }
+                else if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_HELD_ITEM)
+                {
+                    const struct TrainerMonScaledItemDefaultMoves *partyData = gTrainers[trainerNum].party.ScaledItemDefaultMoves;
+                    iv = partyData[i].iv;
+                    speciesCount = partyData[i].speciesCount;
+                    scaledSpecies = partyData[i].speciesList;
+                    levelOffset = partyData[i].levelOffset;
+                    heldItemCount = partyData[i].heldItemCount;
+                    scaledItem = partyData[i].heldItemList;
+                }
+                else if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_CUSTOM_MOVESET)
+                {
+                    const struct TrainerMonScaledNoItemCustomMoves *partyData = gTrainers[trainerNum].party.ScaledNoItemCustomMoves;
+                    iv = partyData[i].iv;
+                    speciesCount = partyData[i].speciesCount;
+                    scaledSpecies = partyData[i].speciesList;
+                    levelOffset = partyData[i].levelOffset;
+                    moveCount = partyData[i].moveCount;
+                    scaledMoves = partyData[i].moveList;
+                    disallowAttackingMoveTypeOverlap = partyData[i].disallowAttackingMoveTypeOverlap;
+                }
+                else
+                {
+                    const struct TrainerMonScaledNoItemDefaultMoves *partyData = gTrainers[trainerNum].party.ScaledNoItemDefaultMoves;
+                    iv = partyData[i].iv;
+                    speciesCount = partyData[i].speciesCount;
+                    scaledSpecies = partyData[i].speciesList;
+                    levelOffset = partyData[i].levelOffset;
+                }
+
+                if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_CUSTOM_ABILITY)
+                {
+                    for (j = 0; j < speciesCount; j++) 
                     {
-                        species = scaledSpecies[j].id;
-                        break;
+                        if (gSaveBlock1Ptr->scaledLevel >= scaledSpecies.CustomAbility[j].minLvl)
+                        {
+                            species = scaledSpecies.CustomAbility[j].id;
+                            abilityNum = scaledSpecies.CustomAbility[j].abilityNum;
+                            break;
+                        }
+                    }
+                    if (species == SPECIES_NONE)
+                    {
+                        // TODO: handle none case
+                        continue;
                     }
                 }
-                if (species == SPECIES_NONE)
+                else
                 {
-                    // TODO: handle none case
-                    break;
+                    for (j = 0; j < speciesCount; j++) 
+                    {
+                        if (gSaveBlock1Ptr->scaledLevel >= scaledSpecies.RandomAbility[j].minLvl)
+                        {
+                            species = scaledSpecies.RandomAbility[j].id;
+                            break;
+                        }
+                    }
+                    if (species == SPECIES_NONE)
+                    {
+                        // TODO: handle none case
+                        continue;
+                    }
                 }
 
                 for (j = 0; gSpeciesNames[species][j] != EOS; j++)
                     nameHash += gSpeciesNames[species][j];
 
                 personalityValue += nameHash << 8;
-                fixedIV = partyData[i].iv * 31 / 255;
-                CreateMon(&party[i], species, gSaveBlock1Ptr->scaledLevel + partyData[i].levelOffset, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
+                fixedIV = iv * 31 / 255;
+                CreateMon(&party[i], species, gSaveBlock1Ptr->scaledLevel + levelOffset, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
                 
-                for (j = 0; j < partyData[i].heldItemCount; j++) 
-                {
-                    if (gSaveBlock1Ptr->scaledLevel >= scaledItem[j].minLvl)
-                        heldItem = scaledItem[j].id;
-                }
-                SetMonData(&party[i], MON_DATA_HELD_ITEM, &heldItem);
+                if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_CUSTOM_ABILITY)
+                    SetMonData(&party[i], MON_DATA_ABILITY_NUM, &abilityNum);
 
-                j = 0;
-                while (j < partyData->moveCount && setMoves != 0x0F)
+                if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_HELD_ITEM)
                 {
-                    u8 k;
-                    switch (moveState)
+                    for (j = 0; j < heldItemCount; j++) 
                     {
-                    case 0: // check if move can be learned
-                        if (gSaveBlock1Ptr->scaledLevel < scaledMoves[j].minLvl)
-                            moveState += 10;
-                        moveState++;
-                        break;
-                    case 1: // check if mon already has move
-                        for (k = 0; k < MAX_MON_MOVES; k++)
+                        if (gSaveBlock1Ptr->scaledLevel >= scaledItem[j].minLvl)
+                            heldItem = scaledItem[j].id;
+                    }
+                    SetMonData(&party[i], MON_DATA_HELD_ITEM, &heldItem);
+                }
+                
+                if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_CUSTOM_MOVESET)
+                {
+                    j = 0;
+                    while (j < moveCount && setMoves != 0x0F)
+                    {
+                        u8 k;
+                        switch (moveState)
                         {
-                            if (GetMonData(&party[i], MON_DATA_MOVE1 + k) == scaledMoves[j].id)
-                            {
-                                setMoves |= (1 << k);
+                        case 0: // check if move can be learned
+                            if (gSaveBlock1Ptr->scaledLevel < scaledMoves[j].minLvl)
                                 moveState += 10;
-                                break;
-                            }
-                        }
-                        moveState++;
-                        break;
-                    case 2: // if possible, teach to empty moveslot
-                        for (k = 0; k < MAX_MON_MOVES; k++)
-                        {
-                            if (GetMonData(&party[i], MON_DATA_MOVE1 + k) == MOVE_NONE)
+                            moveState++;
+                            break;
+                        case 1: // check if mon already has move
+                            for (k = 0; k < MAX_MON_MOVES; k++)
                             {
-                                SetMonData(&party[i], MON_DATA_MOVE1 + k, &scaledMoves[j].id);
-                                SetMonData(&party[i], MON_DATA_PP1 + k, &gBattleMoves[scaledMoves[j].id].pp);
-                                setMoves |= (1 << k);
-                                moveState += 10;
-                                break;
+                                if (GetMonData(&party[i], MON_DATA_MOVE1 + k) == scaledMoves[j].id)
+                                {
+                                    setMoves |= (1 << k);
+                                    moveState += 10;
+                                    break;
+                                }
                             }
-                        }
-                        moveState++;
-                        break;
-                    case 3: // check for attacking move with the same type
-                        for (k = 0; k < MAX_MON_MOVES && partyData->disallowAttackingMoveTypeOverlap; k++)
-                        {
-                            if (setMoves & (1 << k) &&
-                                gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].split != SPLIT_STATUS &&
-                                gBattleMoves[scaledMoves[j].id].split != SPLIT_STATUS &&
-                                gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].type == gBattleMoves[scaledMoves[j].id].type)
+                            moveState++;
+                            break;
+                        case 2: // if possible, teach to empty moveslot
+                            for (k = 0; k < MAX_MON_MOVES; k++)
                             {
-                                moveState += 10;
-                                break;
+                                if (GetMonData(&party[i], MON_DATA_MOVE1 + k) == MOVE_NONE)
+                                {
+                                    SetMonData(&party[i], MON_DATA_MOVE1 + k, &scaledMoves[j].id);
+                                    SetMonData(&party[i], MON_DATA_PP1 + k, &gBattleMoves[scaledMoves[j].id].pp);
+                                    setMoves |= (1 << k);
+                                    moveState += 10;
+                                    break;
+                                }
                             }
-                        }
-                        moveState++;
-                        break;
-                    case 4: // if possible, replace attacking move with same type of lower priority
-                        for (k = 0; k < MAX_MON_MOVES && partyData->disallowAttackingMoveTypeOverlap; k++)
-                        {
-                            if (!(setMoves & (1 << k)) &&
-                                gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].split != SPLIT_STATUS &&
-                                gBattleMoves[scaledMoves[j].id].split != SPLIT_STATUS &&
-                                gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].type == gBattleMoves[scaledMoves[j].id].type)
+                            moveState++;
+                            break;
+                        case 3: // check for attacking move with the same type
+                            for (k = 0; k < MAX_MON_MOVES && disallowAttackingMoveTypeOverlap; k++)
                             {
-                                SetMonData(&party[i], MON_DATA_MOVE1 + k, &scaledMoves[j].id);
-                                SetMonData(&party[i], MON_DATA_PP1 + k, &gBattleMoves[scaledMoves[j].id].pp);
-                                setMoves |= (1 << k);
-                                moveState += 10;
-                                break;
+                                if (setMoves & (1 << k) &&
+                                    gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].split != SPLIT_STATUS &&
+                                    gBattleMoves[scaledMoves[j].id].split != SPLIT_STATUS &&
+                                    gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].type == gBattleMoves[scaledMoves[j].id].type)
+                                {
+                                    moveState += 10;
+                                    break;
+                                }
                             }
-                        }
-                        moveState++;
-                        break;
-                    case 5: // replace oldest level up move
-                        for (k = 0; k < MAX_MON_MOVES; k++)
-                        {
-                            if (!(setMoves & (1 << k)))
+                            moveState++;
+                            break;
+                        case 4: // if possible, replace attacking move with same type of lower priority
+                            for (k = 0; k < MAX_MON_MOVES && disallowAttackingMoveTypeOverlap; k++)
                             {
-                                SetMonData(&party[i], MON_DATA_MOVE1 + k, &scaledMoves[j].id);
-                                SetMonData(&party[i], MON_DATA_PP1 + k, &gBattleMoves[scaledMoves[j].id].pp);
-                                setMoves |= (1 << k);
-                                break;
+                                if (!(setMoves & (1 << k)) &&
+                                    gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].split != SPLIT_STATUS &&
+                                    gBattleMoves[scaledMoves[j].id].split != SPLIT_STATUS &&
+                                    gBattleMoves[GetMonData(&party[i], MON_DATA_MOVE1 + k)].type == gBattleMoves[scaledMoves[j].id].type)
+                                {
+                                    SetMonData(&party[i], MON_DATA_MOVE1 + k, &scaledMoves[j].id);
+                                    SetMonData(&party[i], MON_DATA_PP1 + k, &gBattleMoves[scaledMoves[j].id].pp);
+                                    setMoves |= (1 << k);
+                                    moveState += 10;
+                                    break;
+                                }
                             }
+                            moveState++;
+                            break;
+                        case 5: // replace oldest level up move
+                            for (k = 0; k < MAX_MON_MOVES; k++)
+                            {
+                                if (!(setMoves & (1 << k)))
+                                {
+                                    SetMonData(&party[i], MON_DATA_MOVE1 + k, &scaledMoves[j].id);
+                                    SetMonData(&party[i], MON_DATA_PP1 + k, &gBattleMoves[scaledMoves[j].id].pp);
+                                    setMoves |= (1 << k);
+                                    break;
+                                }
+                            }
+                            // fall through
+                        default: // next move
+                            moveState = 0;
+                            j++;
+                            break;
                         }
-                        // fall through
-                    default: // next move
-                        moveState = 0;
-                        j++;
-                        break;
                     }
                 }
-                break;
-            }
             }
         }
 

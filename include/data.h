@@ -58,15 +58,28 @@ struct ScaledMove
     u8 minLvl;
 };
 
-struct ScaledSpecies
+struct ScaledSpeciesRandomAbility
 {
     u16 id;
     u8 minLvl;
 };
 
+struct ScaledSpeciesCustomAbility
+{
+    u16 id;
+    u8 minLvl;
+    u8 abilityNum:2;
+};
+
+union ScaledSpeciesPtr
+{
+    const struct ScaledSpeciesRandomAbility *RandomAbility;
+    const struct ScaledSpeciesCustomAbility *CustomAbility;
+};
+
 struct TrainerMonScaledNoItemDefaultMoves
 {
-    const struct ScaledSpecies *speciesList;
+    union ScaledSpeciesPtr speciesList;
     u16 iv;
     u8 speciesCount;
     s8 levelOffset;
@@ -75,7 +88,7 @@ struct TrainerMonScaledNoItemDefaultMoves
 
 struct TrainerMonScaledNoItemCustomMoves
 {
-    const struct ScaledSpecies *speciesList;
+    union ScaledSpeciesPtr speciesList;
     const struct ScaledMove *moveList;
     u16 iv;
     u8 speciesCount;
@@ -86,7 +99,7 @@ struct TrainerMonScaledNoItemCustomMoves
 
 struct TrainerMonScaledItemDefaultMoves
 {
-    const struct ScaledSpecies *speciesList;
+    union ScaledSpeciesPtr speciesList;
     const struct ScaledItem *heldItemList;
     u16 iv;
     u8 speciesCount;
@@ -97,7 +110,7 @@ struct TrainerMonScaledItemDefaultMoves
 
 struct TrainerMonScaledItemCustomMoves
 {
-    const struct ScaledSpecies *speciesList;
+    union ScaledSpeciesPtr speciesList;
     const struct ScaledItem *heldItemList;
     const struct ScaledMove *moveList;
     u16 iv;
