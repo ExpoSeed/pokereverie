@@ -2015,7 +2015,7 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
 
                 personalityValue += nameHash << 8;
                 fixedIV = iv * 31 / 255;
-                CreateMon(&party[i], species, gSaveBlock1Ptr->scaledLevel + levelOffset, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
+                CreateMon(&party[i], species, (levelOffset < 0) ? gSaveBlock1Ptr->scaledLevel - abs(levelOffset) : gSaveBlock1Ptr->scaledLevel + levelOffset, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
                 
                 if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_CUSTOM_ABILITY)
                     SetMonData(&party[i], MON_DATA_ABILITY_NUM, &abilityNum);
