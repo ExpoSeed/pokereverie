@@ -1021,7 +1021,7 @@ static void QuestMenu_InitItems(void)
 {
     sStateDataPtr->nItems = SIDE_QUEST_COUNT;
     sStateDataPtr->maxShowed = sStateDataPtr->nItems + 1 <= 6 ? sStateDataPtr->nItems + 1 : 6;
-    sSpriteId = 0xFF;
+    // sSpriteId = 0xFF;
     sLeftArrowId = 0xFF;
     sRightArrowId = 0xFF;
     //DebugQuestMenu();
@@ -1084,7 +1084,7 @@ static void Task_QuestMenuMain(u8 taskId)
         ListMenuGetScrollAndRow(data[0], &scroll, &row);
         questId = sListMenuItems[scroll + row].id;
         
-        leftArrow = currentState > 1;
+        leftArrow = currentState > 1 && currentState <= sSideQuests[questId].states + 1 && sListMenuItems[scroll + row].id != LIST_CANCEL;
         rightArrow = currentState < gSaveBlock2Ptr->questStates[questId] && currentState < sSideQuests[questId].states && sListMenuItems[scroll + row].id != LIST_CANCEL;
         QuestMenu_PlaceArrows(leftArrow, rightArrow);
 
