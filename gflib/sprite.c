@@ -572,6 +572,8 @@ u8 CreateSpriteAt(u8 index, const struct SpriteTemplate *template, s16 x, s16 y,
     sprite->callback = template->callback;
     sprite->pos1.x = x;
     sprite->pos1.y = y;
+    sprite->tileTag = template->tileTag;
+    sprite->paletteTag = template->paletteTag;
 
     CalcCenterToCornerVec(sprite, sprite->oam.shape, sprite->oam.size, sprite->oam.affineMode);
 
@@ -881,14 +883,14 @@ void ResetAllSprites(void)
 // UB: template pointer may point to freed temporary storage
 void FreeSpriteTiles(struct Sprite *sprite)
 {
-    if (sprite->template->tileTag != 0xFFFF)
-        FreeSpriteTilesByTag(sprite->template->tileTag);
+    if (sprite->tileTag != 0xFFFF)
+        FreeSpriteTilesByTag(sprite->tileTag);
 }
 
 // UB: template pointer may point to freed temporary storage
 void FreeSpritePalette(struct Sprite *sprite)
 {
-    FreeSpritePaletteByTag(sprite->template->paletteTag);
+    FreeSpritePaletteByTag(sprite->paletteTag);
 }
 
 void FreeSpriteOamMatrix(struct Sprite *sprite)
