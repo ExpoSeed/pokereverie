@@ -45,4 +45,6 @@
 #define SIDE_QUEST_30        29
 #define SIDE_QUEST_COUNT     (SIDE_QUEST_30 + 1)
 
+#define MAX_EVENT_COUNT      10
+
 #endif // GUARD_CONSTANTS_QUESTS_H

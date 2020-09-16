@@ -2325,10 +2325,10 @@ bool8 ScrCmd_questmenu(struct ScriptContext *ctx)
         GetSetQuestFlag(questId, VAR_SET_COMPLETED);
         break;
     case QUEST_MENU_GET_STATE:
-        gSpecialVar_Result = gSaveBlock2Ptr->questStates[questId];
+        gSpecialVar_Result = gSaveBlock2Ptr->questStates[questId].state;
         break;
     case QUEST_MENU_INCREMENT_STATE:
-        gSaveBlock2Ptr->questStates[questId]++;
+        gSaveBlock2Ptr->questStates[questId].state++;
         break;
     case QUEST_MENU_BUFFER_QUEST_NAME:
             CopyQuestName(gStringVar1, questId);
