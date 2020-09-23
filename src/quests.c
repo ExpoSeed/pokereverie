@@ -1511,7 +1511,7 @@ void QuestMenu_CreateSideQuestPic(s32 itemIndex, u8 currentState)
         sSpriteId = AddItemIconSprite(TAG_ICON, TAG_ICON, ITEM_NONE);
         if (sSpriteId != MAX_SPRITES)
         {
-            gSprites[sSpriteId].pos2.x = 25;
+            gSprites[sSpriteId].pos2.x = 29;
             gSprites[sSpriteId].pos2.y = 140;
         }
         return;
@@ -1525,7 +1525,7 @@ void QuestMenu_CreateSideQuestPic(s32 itemIndex, u8 currentState)
         sSpriteId = AddItemIconSprite(TAG_ICON, TAG_ICON, event->picId);
         if (sSpriteId != MAX_SPRITES)
         {
-            gSprites[sSpriteId].pos2.x = 25;
+            gSprites[sSpriteId].pos2.x = 29;
             gSprites[sSpriteId].pos2.y = 140;
         }
         break;
@@ -1536,7 +1536,7 @@ void QuestMenu_CreateSideQuestPic(s32 itemIndex, u8 currentState)
             y = 132;
         else
             y = 140;
-        sSpriteId = AddPseudoObjectEvent(event->picId, SpriteCallbackDummy, 21, y, 0);
+        sSpriteId = AddPseudoObjectEvent(event->picId, SpriteCallbackDummy, 25, y, 0);
         if (sSpriteId != MAX_SPRITES) 
         {
             gSprites[sSpriteId].oam.priority = 0;
@@ -1545,7 +1545,7 @@ void QuestMenu_CreateSideQuestPic(s32 itemIndex, u8 currentState)
     case PICTYPE_PARTY_ICON:
         sCurrentPicType = PICTYPE_PARTY_ICON;
         LoadMonIconPalette(event->picId);
-        sSpriteId = CreateMonIcon(event->picId, SpriteCallbackDummy, 21, 135, 0, 0, FALSE);
+        sSpriteId = CreateMonIcon(event->picId, SpriteCallbackDummy, 25, 135, 0, 0, FALSE);
         break;
     case PICTYPE_NONE:
         sCurrentPicType = PICTYPE_NONE;
@@ -1595,10 +1595,10 @@ static void QuestMenu_InitArrows(void)
 
     LoadCompressedSpriteSheet(&sheet);
     LoadSpritePalette(&palSheet);
-    sLeftArrowId = CreateSprite(&spriteTemp1, 40, 136, 0);
+    sLeftArrowId = CreateSprite(&spriteTemp1, 6, 136, 0);
     gSprites[sLeftArrowId].invisible = 1;
     spriteTemp1.anims = sSpriteAnimTable_ScrollArrowFlip;
-    sRightArrowId = CreateSprite(&spriteTemp1, 235, 136, 0);
+    sRightArrowId = CreateSprite(&spriteTemp1, 43, 136, 0);
     gSprites[sRightArrowId].invisible = 1;
 }
 
