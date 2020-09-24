@@ -1607,16 +1607,52 @@
 	.2byte \quantity
 	.endm
 
-    .macro questmenu case:req, questId:req
-    .byte 0xe3
-    .byte \case
-    .byte \questId
-    .endm
-    
-    .macro openquestmenu
-    questmenu 0 0
-    .endm
+	.macro openquestmenu
+	.byte 0xe3
+	.endm
 
+	.macro setquestevent questId:req, eventIndex:req, eventId:req
+	.byte 0xe4
+	.byte \questId
+	.byte \eventIndex
+	.byte \eventId
+	.endm
+
+	.macro getquestevent questId:req, eventIndex:req
+	.byte 0xe5
+	.byte \questId
+	.endm
+
+	.macro getqueststate questId:req
+	.byte 0xe6
+	.byte \questId
+	.endm
+	
+	.macro setqueststate questId:req, newValue:req
+	.byte 0xe7
+	.byte \questId
+	.byte \newValue
+	.endm
+	
+	.macro incrementqueststate questId:req
+	.byte 0xe8
+	.byte \questId
+	.endm
+	
+	.macro completequest questId:req
+	.byte 0xe9
+	.byte \questId
+	.endm
+	
+	.macro bufferquestname questId:req
+	.byte 0xea
+	.byte \questId
+	.endm
+	
+	.macro isquestcomplete questId:req
+	.byte 0xeb
+	.byte \questId
+	.endm
 
 @ Supplementary
 
