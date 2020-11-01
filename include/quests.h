@@ -12,15 +12,20 @@ struct SideQuestDescStrings
 	const u8* completed;
 };
 
+struct SideQuestEvent
+{
+	const u8* desc;
+	const u8 picType;
+	const u32 picId;
+};
+
 struct SideQuest 
 {
 	/*0x00*/ const u8* name;
-	/*0x04*/ const struct SideQuestDescStrings* desc;
+	/*0x04*/ const struct SideQuestEvent* events;
 	/*0x08*/ const u8* poc;
 	/*0x0C*/ const u8* map;
-	/*0x10*/ const u8 states;
-			 const u8 picType;
-			 const u32 picId;
+	/*0x10*/ const u8 eventCount;
 	///*0x10*/ const u8* hint;
 	// /*0x14*/ const u8* reward;
 }; /* size = 0x18 */

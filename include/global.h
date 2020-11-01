@@ -456,7 +456,13 @@ struct RankingHall2P
 
 // quest menu
 #include "constants/quests.h"
-#define SIDE_QUEST_FLAGS_COUNT     ((SIDE_QUEST_COUNT / 8) + ((SIDE_QUEST_COUNT % 8) ? 1 : 0))
+// #define SIDE_QUEST_FLAGS_COUNT     ((SIDE_QUEST_COUNT / 8) + ((SIDE_QUEST_COUNT % 8) ? 1 : 0))
+struct SideQuestState
+{
+    u8 state:7;
+    u8 completed:1;
+    u8 eventList[MAX_EVENT_COUNT];
+};
 
 struct SaveBlock2
 {
@@ -490,7 +496,7 @@ struct SaveBlock2
     /*0x57C*/ struct RankingHall2P hallRecords2P[2][3]; // From record mixing.
     /*0x624*/ u16 contestLinkResults[5][4]; // 4 positions for 5 categories.
     /*0x64C*/ struct BattleFrontier frontier;
-    /*0x0F2C*/ u8 questStates[SIDE_QUEST_COUNT];
+    /*0x0F2C*/ struct SideQuestState questStates[SIDE_QUEST_COUNT];
     // /*0x????*/ u8 completedQuests[SIDE_QUEST_FLAGS_COUNT];
     // /*0x????*/ u8 activeQuest;
 }; 

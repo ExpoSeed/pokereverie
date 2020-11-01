@@ -234,6 +234,9 @@ struct Sprite
              u8 subspriteMode:2;
 
     /*0x43*/ u8 subpriority;
+
+    u16 tileTag;
+    u16 paletteTag;
 };
 
 struct OamMatrix

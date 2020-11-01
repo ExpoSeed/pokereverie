@@ -2304,52 +2304,66 @@ bool8 ScrCmd_warpsootopolislegend(struct ScriptContext *ctx)
     return TRUE;
 }
 
-bool8 ScrCmd_questmenu(struct ScriptContext *ctx)
+bool8 ScrCmd_openquestmenu (struct ScriptContext *ctx) 
 {
-    u8 caseId = ScriptReadByte(ctx);
-    u8 questId = VarGet(ScriptReadByte(ctx));
-
-    switch (caseId)
-    {
-    case QUEST_MENU_OPEN:
-    default:
-        SetQuestMenuActive();
-        BeginNormalPaletteFade(0xFFFFFFFF, 2, 16, 0, 0);
-        QuestMenu_Init(0, CB2_ReturnToFieldContinueScriptPlayMapMusic);
-        ScriptContext1_Stop();
-        break;
-    case QUEST_MENU_UNLOCK_QUEST:
-        GetSetQuestFlag(questId, VAR_SET_UNLOCKED);
-        break;
-    case QUEST_MENU_COMPLETE_QUEST:
-        GetSetQuestFlag(questId, VAR_SET_COMPLETED);
-        break;
-    case QUEST_MENU_GET_STATE:
-        gSpecialVar_Result = gSaveBlock2Ptr->questStates[questId];
-        break;
-    case QUEST_MENU_INCREMENT_STATE:
-        gSaveBlock2Ptr->questStates[questId]++;
-        break;
-    case QUEST_MENU_BUFFER_QUEST_NAME:
-            CopyQuestName(gStringVar1, questId);
-        break;
-    // case QUEST_MENU_GET_ACTIVE_QUEST:
-    //     gSpecialVar_Result = GetActiveQuestIndex();
-    //     break;
-    case QUEST_MENU_CHECK_UNLOCKED:
-        if (GetSetQuestFlag(questId, VAR_GET_UNLOCKED))
-            gSpecialVar_Result = TRUE;
-        else
-            gSpecialVar_Result = FALSE;
-        break;
-    case QUEST_MENU_CHECK_COMPLETE:
-        if (GetSetQuestFlag(questId, VAR_GET_COMPLETED))
-            gSpecialVar_Result = TRUE;
-        else
-            gSpecialVar_Result = FALSE;
-        break;
-    }
-    
+    SetQuestMenuActive();
+    BeginNormalPaletteFade(0xFFFFFFFF, 2, 16, 0, 0);
+    QuestMenu_Init(0, CB2_ReturnToFieldContinueScriptPlayMapMusic);
+    ScriptContext1_Stop();
     return TRUE;
 }
-
+bool8 ScrCmd_setquestevent (struct ScriptContext *ctx) 
+{
+    u8 questId = VarGet(ScriptReadByte(ctx));
+    u8 eventIndex = VarGet(ScriptReadByte(ctx));
+    u8 eventId = VarGet(ScriptReadByte(ctx));
+    gSaveBlock2Ptr->questStates[questId].eventList[eventIndex] = eventId;
+    return FALSE;
+}
+bool8 ScrCmd_getquestevent (struct ScriptContext *ctx) 
+{
+    u8 questId = VarGet(ScriptReadByte(ctx));
+    u8 eventIndex = VarGet(ScriptReadByte(ctx));
+    gSpecialVar_Result = gSaveBlock2Ptr->questStates[questId].eventList[eventIndex];
+    return FALSE;
+}
+bool8 ScrCmd_getqueststate (struct ScriptContext *ctx) 
+{
+    u8 questId = VarGet(ScriptReadByte(ctx));
+    gSpecialVar_Result = gSaveBlock2Ptr->questStates[questId].state;
+    return FALSE;
+}
+bool8 ScrCmd_setqueststate (struct ScriptContext *ctx) 
+{
+    u8 questId = VarGet(ScriptReadByte(ctx));
+    u8 newValue = ScriptReadByte(ctx);
+    gSaveBlock2Ptr->questStates[questId].state = newValue;
+    return FALSE;
+}
+bool8 ScrCmd_incrementqueststate (struct ScriptContext *ctx) 
+{
+    u8 questId = VarGet(ScriptReadByte(ctx));
+    gSaveBlock2Ptr->questStates[questId].state++;
+    return FALSE;
+}
+bool8 ScrCmd_completequest (struct ScriptContext *ctx) 
+{
+    u8 questId = VarGet(ScriptReadByte(ctx));
+    GetSetQuestFlag(questId, VAR_SET_COMPLETED);
+    return FALSE;
+}
+bool8 ScrCmd_bufferquestname (struct ScriptContext *ctx) 
+{
+    u8 questId = VarGet(ScriptReadByte(ctx));
+    CopyQuestName(gStringVar1, questId);
+    return FALSE;
+}
+bool8 ScrCmd_isquestcomplete (struct ScriptContext *ctx) 
+{
+    u8 questId = VarGet(ScriptReadByte(ctx));
+    if (GetSetQuestFlag(questId, VAR_GET_COMPLETED))
+        gSpecialVar_Result = TRUE;
+    else
+        gSpecialVar_Result = FALSE;
+    return FALSE;
+}
