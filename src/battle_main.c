@@ -1931,6 +1931,7 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
                 u16 heldItem = ITEM_NONE;
                 u8 setMoves = 0;
                 u8 moveState = 0;
+                u8 level;
                 
                 // initialize all the data properly and avoid gamefreak's stupid copy pasted switch case
                 if (gTrainers[trainerNum].partyFlags & (F_TRAINER_PARTY_HELD_ITEM | F_TRAINER_PARTY_CUSTOM_MOVESET))
@@ -2015,7 +2016,22 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
 
                 personalityValue += nameHash << 8;
                 fixedIV = iv * 31 / 255;
-                CreateMon(&party[i], species, (levelOffset < 0) ? gSaveBlock1Ptr->scaledLevel - abs(levelOffset) : gSaveBlock1Ptr->scaledLevel + levelOffset, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
+                if (levelOffset < 0)
+                {
+                    levelOffset = abs(levelOffset);
+                    // subtraction would bring below 0
+                    if ((s32) (gSaveBlock1Ptr->scaledLevel - levelOffset) < MIN_LEVEL)
+                        level = MIN_LEVEL;
+                    else
+                        level = gSaveBlock1Ptr->scaledLevel - levelOffset;
+                }
+                else
+                {
+                    level = gSaveBlock1Ptr->scaledLevel + levelOffset;
+                    if (level >= MAX_LEVEL)
+                        level = MAX_LEVEL;
+                }
+                CreateMon(&party[i], species, level, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
                 
                 if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_CUSTOM_ABILITY)
                     SetMonData(&party[i], MON_DATA_ABILITY_NUM, &abilityNum);

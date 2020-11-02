@@ -6015,7 +6015,21 @@ static u32 GetTrainerMoneyToGive(u16 trainerId)
                 const struct TrainerMonScaledNoItemDefaultMoves *partyData = gTrainers[trainerId].party.ScaledNoItemDefaultMoves;
                 levelOffset = partyData[gTrainers[trainerId].partySize - 1].levelOffset;
             }
-            lastMonLevel = (levelOffset < 0) ? gSaveBlock1Ptr->scaledLevel - abs(levelOffset) : gSaveBlock1Ptr->scaledLevel + levelOffset;
+            if (levelOffset < 0)
+            {
+                levelOffset = abs(levelOffset);
+                // subtraction would bring below 0
+                if ((s32) (gSaveBlock1Ptr->scaledLevel - levelOffset) < MIN_LEVEL)
+                    lastMonLevel = MIN_LEVEL;
+                else
+                    lastMonLevel = gSaveBlock1Ptr->scaledLevel - levelOffset;
+            }
+            else
+            {
+                level = gSaveBlock1Ptr->scaledLevel + levelOffset;
+                if (lastMonLevel >= MAX_LEVEL)
+                    lastMonLevel = MAX_LEVEL;
+            }
         }
 
         for (; gTrainerMoneyTable[i].classId != 0xFF; i++)
