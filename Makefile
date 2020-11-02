@@ -343,6 +343,6 @@ berry_fix:
 libagbsyscall:
 	@$(MAKE) -C libagbsyscall TOOLCHAIN=$(TOOLCHAIN)
 
-debug: ; @$(MAKE) DDEBUG=1
+debug: ; @$(MAKE) DDEBUG=1 DINFO=1
 
-modern_debug: ; @$(MAKE) MODERN=1 DDEBUG=1
+modern_debug: ; @$(MAKE) MODERN=1 DDEBUG=1 DINFO=1
