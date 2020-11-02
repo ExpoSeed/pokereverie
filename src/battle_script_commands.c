@@ -6026,7 +6026,7 @@ static u32 GetTrainerMoneyToGive(u16 trainerId)
             }
             else
             {
-                level = gSaveBlock1Ptr->scaledLevel + levelOffset;
+                lastMonLevel = gSaveBlock1Ptr->scaledLevel + levelOffset;
                 if (lastMonLevel >= MAX_LEVEL)
                     lastMonLevel = MAX_LEVEL;
             }
