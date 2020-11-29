@@ -372,8 +372,10 @@
 // All trainer parties specify the IV, level, and species for each Pokémon in the
 // party. Some trainer parties also specify held items and custom moves for each
 // Pokémon.
-#define F_TRAINER_PARTY_CUSTOM_MOVESET (1 << 0)
-#define F_TRAINER_PARTY_HELD_ITEM      (1 << 1)
-#define F_TRAINER_PARTY_SCALED         (1 << 2)
-#define F_TRAINER_PARTY_CUSTOM_ABILITY (1 << 3)
+#define F_TRAINER_PARTY_CUSTOM_MOVESET  (1 << 0)
+#define F_TRAINER_PARTY_HELD_ITEM       (1 << 1)
+#define F_TRAINER_PARTY_CUSTOM_ABILITY  (1 << 2)
+#define F_TRAINER_PARTY_SCALED_BY_LEVEL (1 << 3)
+#define F_TRAINER_PARTY_SCALED_BY_BADGE (1 << 4)
+
 #endif  // GUARD_TRAINERS_H

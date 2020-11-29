@@ -1915,7 +1915,7 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
             
             }
 
-            if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_SCALED)
+            if (gTrainers[trainerNum].partyFlags & (F_TRAINER_PARTY_SCALED_BY_LEVEL | F_TRAINER_PARTY_SCALED_BY_BADGE))
             {
                 union ScaledSpeciesPtr scaledSpecies;
                 const struct ScaledItem *scaledItem;
@@ -1977,11 +1977,16 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
                     levelOffset = partyData[i].levelOffset;
                 }
 
+                if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_SCALED_BY_LEVEL)
+                    level = GetScaledLevel(F_TRAINER_PARTY_SCALED_BY_LEVEL, levelOffset);
+                else
+                    level = GetScaledLevel(F_TRAINER_PARTY_SCALED_BY_BADGE, levelOffset);
+
                 if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_CUSTOM_ABILITY)
                 {
                     for (j = 0; j < speciesCount; j++) 
                     {
-                        if (gSaveBlock1Ptr->scaledLevel >= scaledSpecies.CustomAbility[j].minLvl)
+                        if (level >= scaledSpecies.CustomAbility[j].minLvl)
                         {
                             species = scaledSpecies.CustomAbility[j].id;
                             abilityNum = scaledSpecies.CustomAbility[j].abilityNum;
@@ -1998,7 +2003,7 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
                 {
                     for (j = 0; j < speciesCount; j++) 
                     {
-                        if (gSaveBlock1Ptr->scaledLevel >= scaledSpecies.RandomAbility[j].minLvl)
+                        if (level >= scaledSpecies.RandomAbility[j].minLvl)
                         {
                             species = scaledSpecies.RandomAbility[j].id;
                             break;
@@ -2016,21 +2021,7 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
 
                 personalityValue += nameHash << 8;
                 fixedIV = iv * 31 / 255;
-                if (levelOffset < 0)
-                {
-                    levelOffset = abs(levelOffset);
-                    // subtraction would bring below 0
-                    if ((s32) (gSaveBlock1Ptr->scaledLevel - levelOffset) < MIN_LEVEL)
-                        level = MIN_LEVEL;
-                    else
-                        level = gSaveBlock1Ptr->scaledLevel - levelOffset;
-                }
-                else
-                {
-                    level = gSaveBlock1Ptr->scaledLevel + levelOffset;
-                    if (level >= MAX_LEVEL)
-                        level = MAX_LEVEL;
-                }
+
                 CreateMon(&party[i], species, level, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
                 
                 if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_CUSTOM_ABILITY)
@@ -2040,7 +2031,7 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
                 {
                     for (j = 0; j < heldItemCount; j++) 
                     {
-                        if (gSaveBlock1Ptr->scaledLevel >= scaledItem[j].minLvl)
+                        if (level >= scaledItem[j].minLvl)
                             heldItem = scaledItem[j].id;
                     }
                     SetMonData(&party[i], MON_DATA_HELD_ITEM, &heldItem);
@@ -2055,7 +2046,7 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
                         switch (moveState)
                         {
                         case 0: // check if move can be learned
-                            if (gSaveBlock1Ptr->scaledLevel < scaledMoves[j].minLvl)
+                            if (level < scaledMoves[j].minLvl)
                                 moveState += 10;
                             moveState++;
                             break;
@@ -2142,6 +2133,45 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
     }
 
     return gTrainers[trainerNum].partySize;
+}
+
+u32 GetScaledLevel(u8 scalingType, s32 levelOffset)
+{
+    u32 level;
+    u32 i;
+    switch (scalingType) {
+        case F_TRAINER_PARTY_SCALED_BY_BADGE:
+            // TODO: phase out saveblock field and switch on badge
+            level = gSaveBlock1Ptr->scaledLevel;
+            break;
+        case F_TRAINER_PARTY_SCALED_BY_LEVEL: 
+            // average the party level
+            level = 0;
+            for (i = 0; i < gSaveBlock1Ptr->playerPartyCount; i++) 
+            {
+                level += GetMonData(&gSaveBlock1Ptr->playerParty[i], MON_DATA_LEVEL);
+            }
+            level /= gSaveBlock1Ptr->playerPartyCount;
+            break;
+    }
+
+    // make sure the level doesn't exceed a valid level
+    if (levelOffset < 0)
+    {
+        levelOffset = abs(levelOffset);
+        // subtraction would bring below 0
+        if ((s32) (level - levelOffset) < MIN_LEVEL)
+            level = MIN_LEVEL;
+        else
+            level -= levelOffset;
+    }
+    else
+    {
+        level += levelOffset;
+        if (level >= MAX_LEVEL)
+            level = MAX_LEVEL;
+    }
+    return level;
 }
 
 void VBlankCB_Battle(void)

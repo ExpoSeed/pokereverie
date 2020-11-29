@@ -72,6 +72,7 @@ void RunBattleScriptCommands_PopCallbacksStack(void);
 void RunBattleScriptCommands(void);
 bool8 TryRunFromBattle(u8 battlerId);
 void SetTypeBeforeUsingMove(u16 move, u8 battlerAtk);
+u32 GetScaledLevel(u8 scalingType, s32 levelOffset);
 
 extern struct UnknownPokemonStruct4 gMultiPartnerParty[MULTI_PARTY_SIZE];
 

@@ -5992,7 +5992,7 @@ static u32 GetTrainerMoneyToGive(u16 trainerId)
             break;
         }
 
-        if (gTrainers[trainerId].partyFlags & F_TRAINER_PARTY_SCALED)
+        if (gTrainers[trainerId].partyFlags & (F_TRAINER_PARTY_SCALED_BY_LEVEL | F_TRAINER_PARTY_SCALED_BY_BADGE))
         {
             s8 levelOffset;
             if (gTrainers[trainerId].partyFlags & (F_TRAINER_PARTY_HELD_ITEM | F_TRAINER_PARTY_CUSTOM_MOVESET))
@@ -6015,21 +6015,11 @@ static u32 GetTrainerMoneyToGive(u16 trainerId)
                 const struct TrainerMonScaledNoItemDefaultMoves *partyData = gTrainers[trainerId].party.ScaledNoItemDefaultMoves;
                 levelOffset = partyData[gTrainers[trainerId].partySize - 1].levelOffset;
             }
-            if (levelOffset < 0)
-            {
-                levelOffset = abs(levelOffset);
-                // subtraction would bring below 0
-                if ((s32) (gSaveBlock1Ptr->scaledLevel - levelOffset) < MIN_LEVEL)
-                    lastMonLevel = MIN_LEVEL;
-                else
-                    lastMonLevel = gSaveBlock1Ptr->scaledLevel - levelOffset;
-            }
+            
+            if (gTrainers[trainerId].partyFlags & F_TRAINER_PARTY_SCALED_BY_LEVEL)
+                lastMonLevel = GetScaledLevel(gTrainers[trainerId].partyFlags, levelOffset);
             else
-            {
-                lastMonLevel = gSaveBlock1Ptr->scaledLevel + levelOffset;
-                if (lastMonLevel >= MAX_LEVEL)
-                    lastMonLevel = MAX_LEVEL;
-            }
+                lastMonLevel = GetScaledLevel(F_TRAINER_PARTY_SCALED_BY_BADGE, levelOffset);
         }
 
         for (; gTrainerMoneyTable[i].classId != 0xFF; i++)
