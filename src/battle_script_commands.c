@@ -5992,7 +5992,7 @@ static u32 GetTrainerMoneyToGive(u16 trainerId)
             break;
         }
 
-        if (gTrainers[trainerId].partyFlags & (F_TRAINER_PARTY_SCALED_BY_LEVEL | F_TRAINER_PARTY_SCALED_BY_BADGE))
+        if (gTrainers[trainerId].partyFlags & F_TRAINER_PARTY_SCALED)
         {
             s8 levelOffset;
             if (gTrainers[trainerId].partyFlags & (F_TRAINER_PARTY_HELD_ITEM | F_TRAINER_PARTY_CUSTOM_MOVESET))

@@ -1915,7 +1915,7 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
             
             }
 
-            if (gTrainers[trainerNum].partyFlags & (F_TRAINER_PARTY_SCALED_BY_LEVEL | F_TRAINER_PARTY_SCALED_BY_BADGE))
+            if (gTrainers[trainerNum].partyFlags & F_TRAINER_PARTY_SCALED)
             {
                 union ScaledSpeciesPtr scaledSpecies;
                 const struct ScaledItem *scaledItem;
