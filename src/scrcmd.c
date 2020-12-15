@@ -2317,33 +2317,33 @@ bool8 ScrCmd_setquestevent (struct ScriptContext *ctx)
     u8 questId = VarGet(ScriptReadByte(ctx));
     u8 eventIndex = VarGet(ScriptReadByte(ctx));
     u8 eventId = VarGet(ScriptReadByte(ctx));
-    gSaveBlock2Ptr->questStates[questId].eventList[eventIndex] = eventId;
+    gSaveBlock2Ptr->quests[questId].eventList[eventIndex] = eventId;
     return FALSE;
 }
 bool8 ScrCmd_getquestevent (struct ScriptContext *ctx) 
 {
     u8 questId = VarGet(ScriptReadByte(ctx));
     u8 eventIndex = VarGet(ScriptReadByte(ctx));
-    gSpecialVar_Result = gSaveBlock2Ptr->questStates[questId].eventList[eventIndex];
+    gSpecialVar_Result = gSaveBlock2Ptr->quests[questId].eventList[eventIndex];
     return FALSE;
 }
-bool8 ScrCmd_getqueststate (struct ScriptContext *ctx) 
+bool8 ScrCmd_getquestprogress (struct ScriptContext *ctx) 
 {
     u8 questId = VarGet(ScriptReadByte(ctx));
-    gSpecialVar_Result = gSaveBlock2Ptr->questStates[questId].state;
+    gSpecialVar_Result = gSaveBlock2Ptr->quests[questId].progress;
     return FALSE;
 }
-bool8 ScrCmd_setqueststate (struct ScriptContext *ctx) 
+bool8 ScrCmd_setquestprogress (struct ScriptContext *ctx) 
 {
     u8 questId = VarGet(ScriptReadByte(ctx));
     u8 newValue = ScriptReadByte(ctx);
-    gSaveBlock2Ptr->questStates[questId].state = newValue;
+    gSaveBlock2Ptr->quests[questId].progress = newValue;
     return FALSE;
 }
-bool8 ScrCmd_incrementqueststate (struct ScriptContext *ctx) 
+bool8 ScrCmd_incrementquestprogress (struct ScriptContext *ctx) 
 {
     u8 questId = VarGet(ScriptReadByte(ctx));
-    gSaveBlock2Ptr->questStates[questId].state++;
+    gSaveBlock2Ptr->quests[questId].progress++;
     return FALSE;
 }
 bool8 ScrCmd_completequest (struct ScriptContext *ctx) 

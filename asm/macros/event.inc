@@ -1624,18 +1624,18 @@
 	.byte \eventIndex
 	.endm
 
-	.macro getqueststate questId:req
+	.macro getquestprogress questId:req
 	.byte 0xe6
 	.byte \questId
 	.endm
 	
-	.macro setqueststate questId:req, newValue:req
+	.macro setquestprogress questId:req, newValue:req
 	.byte 0xe7
 	.byte \questId
 	.byte \newValue
 	.endm
 	
-	.macro incrementqueststate questId:req
+	.macro incrementquestprogress questId:req
 	.byte 0xe8
 	.byte \questId
 	.endm

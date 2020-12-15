@@ -230,9 +230,9 @@ gScriptCmdTable:: @ 81DB67C
     .4byte ScrCmd_openquestmenu
     .4byte ScrCmd_setquestevent
     .4byte ScrCmd_getquestevent
-    .4byte ScrCmd_getqueststate
-    .4byte ScrCmd_setqueststate
-    .4byte ScrCmd_incrementqueststate
+    .4byte ScrCmd_getquestprogress
+    .4byte ScrCmd_setquestprogress
+    .4byte ScrCmd_incrementquestprogress
     .4byte ScrCmd_completequest
     .4byte ScrCmd_bufferquestname
     .4byte ScrCmd_isquestcomplete

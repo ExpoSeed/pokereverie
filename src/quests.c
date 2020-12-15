@@ -58,23 +58,28 @@
 
 struct QuestMenuResources
 {
-    /*0x00*/ MainCallback savedCallback;
-    /*0x04*/ u8 moveModeOrigPos;
-    /*0x05*/ u8 itemMenuIconSlot;
-    /*0x06*/ u8 maxShowed;
-    /*0x07*/ u8 nItems;
-    /*0x08*/ u8 scrollIndicatorArrowPairId;
-    /*0x0A*/ u16 withdrawQuantitySubmenuCursorPos;
-    /*0x0C*/ s16 data[3];
-}; /* size = 0x14 */
+    MainCallback savedCallback;
+    u8 moveModeOrigPos;
+    u8 itemMenuIconSlot;
+    u8 maxShowed;
+    u8 nItems;
+    u8 scrollIndicatorArrowPairId;
+    u16 withdrawQuantitySubmenuCursorPos;
+    s16 data[3];
+    u8 currentProgress;
+    u8 currentPicType;
+    u8 spriteId;
+    u8 leftArrowId;
+    u8 rightArrowId;
+}; 
 
 struct QuestMenuStaticResources
 {
-    /*0x00*/ MainCallback savedCallback;
-    /*0x04*/ u16 scroll;
-    /*0x06*/ u16 row;
-    /*0x08*/ u8 initialized;
-};  /* size = 0xC */
+    MainCallback savedCallback;
+    u16 scroll;
+    u16 row;
+    u8 initialized;
+};  
 
 // RAM
 EWRAM_DATA static struct QuestMenuResources *sStateDataPtr = NULL;
@@ -83,11 +88,6 @@ EWRAM_DATA static struct ListMenuItem *sListMenuItems = NULL;
 EWRAM_DATA static struct QuestMenuStaticResources sListMenuState = {0};
 EWRAM_DATA static u8 sSubmenuWindowIds[3] = {0};
 EWRAM_DATA static u8 sItemMenuIconSpriteIds[12] = {0};        // from pokefirered src/item_menu_icons.c
-EWRAM_DATA static u8 sCurrentState = 0;
-EWRAM_DATA static u8 sCurrentPicType = PICTYPE_NONE;
-EWRAM_DATA static u8 sSpriteId = 0xFF;
-EWRAM_DATA static u8 sLeftArrowId = 0xFF;
-EWRAM_DATA static u8 sRightArrowId = 0xFF;
 
 // This File's Functions
 static void DebugQuestMenu(void);
@@ -129,7 +129,7 @@ static u8 QuestMenu_GetOrCreateSubwindow(u8 idx);
 static void QuestMenu_DestroySubwindow(u8 idx);
 static void QuestMenu_SetInitializedFlag(u8 a0);
 // static bool8 IsActiveQuest(u8 questId);
-static void QuestMenu_CreateSideQuestPic(s32 itemIndex, u8 currentState);
+static void QuestMenu_CreateSideQuestPic(s32 itemIndex, u8 currentProgress);
 static void QuestMenu_DestroySideQuestPic();
 static void Task_ChangeSprite(u8 taskId);
 static void QuestMenu_InitArrows(void);
@@ -341,6 +341,8 @@ void QuestMenu_Init(u8 a0, MainCallback callback)
     sStateDataPtr->itemMenuIconSlot = 0;
     sStateDataPtr->scrollIndicatorArrowPairId = 0xFF;
     sStateDataPtr->savedCallback = 0;
+    sStateDataPtr->leftArrowId = 0xFF;
+    sStateDataPtr->rightArrowId = 0xFF;
     for (i = 0; i < 3; i++)
     {
         sStateDataPtr->data[i] = 0;
@@ -771,9 +773,9 @@ static void QuestMenu_MoveCursorFunc(s32 itemIndex, bool8 onInit, struct ListMen
         {
             if (GetSetQuestFlag(itemIndex, VAR_GET_UNLOCKED))
             {
-                sCurrentState = gSaveBlock2Ptr->questStates[itemIndex].state;
+                sStateDataPtr->currentProgress = gSaveBlock2Ptr->quests[itemIndex].progress;
                 // itemId = sSideQuestDifficultyItemIds[sSideQuestDifficulties[itemIndex]];
-                desc = sSideQuests[itemIndex].events[gSaveBlock2Ptr->questStates[itemIndex].eventList[sCurrentState - 1]].desc;
+                desc = sSideQuests[itemIndex].events[gSaveBlock2Ptr->quests[itemIndex].eventList[sStateDataPtr->currentProgress - 1]].desc;
             }
             // else
             // {
@@ -785,13 +787,13 @@ static void QuestMenu_MoveCursorFunc(s32 itemIndex, bool8 onInit, struct ListMen
         else
         {
             desc = sText_QuestMenu_Exit;
-            sCurrentState = 0xFF;
+            sStateDataPtr->currentProgress = 0xFF;
         }
 
         taskId = CreateTask(Task_ChangeSprite, 0);
         gTasks[taskId].data[0] = 0;
         gTasks[taskId].data[1] = itemIndex;
-        gTasks[taskId].data[2] = sCurrentState;
+        gTasks[taskId].data[2] = sStateDataPtr->currentProgress;
         // QuestMenu_CreateSideQuestPic(itemIndex);
         sStateDataPtr->itemMenuIconSlot ^= 1;
         FillWindowPixelBuffer(1, 0);
@@ -1026,7 +1028,7 @@ static void QuestMenu_InitItems(void)
 {
     sStateDataPtr->nItems = SIDE_QUEST_COUNT;
     sStateDataPtr->maxShowed = sStateDataPtr->nItems + 1 <= 6 ? sStateDataPtr->nItems + 1 : 6;
-    // sSpriteId = 0xFF;
+    // sStateDataPtr->spriteId = 0xFF;
     // DebugQuestMenu();
 }
 
@@ -1087,10 +1089,10 @@ static void Task_QuestMenuMain(u8 taskId)
         ListMenuGetScrollAndRow(data[0], &scroll, &row);
         questId = sListMenuItems[scroll + row].id;
         
-        // leftArrow = sCurrentState > 1 && sCurrentState <= sSideQuests[questId].eventCount + 1 && sListMenuItems[scroll + row].id != LIST_CANCEL;
-        // rightArrow = sCurrentState < gSaveBlock2Ptr->questStates[questId].state && sCurrentState < sSideQuests[questId].eventCount && sListMenuItems[scroll + row].id != LIST_CANCEL;
-        leftArrow = sCurrentState > 1 && sListMenuItems[scroll + row].id != LIST_CANCEL;
-        rightArrow = sCurrentState < gSaveBlock2Ptr->questStates[questId].state && sListMenuItems[scroll + row].id != LIST_CANCEL;
+        // leftArrow = sStateDataPtr->currentProgress > 1 && sStateDataPtr->currentProgress <= sSideQuests[questId].eventCount + 1 && sListMenuItems[scroll + row].id != LIST_CANCEL;
+        // rightArrow = sStateDataPtr->currentProgress < gSaveBlock2Ptr->quests[questId].progress && sStateDataPtr->currentProgress < sSideQuests[questId].eventCount && sListMenuItems[scroll + row].id != LIST_CANCEL;
+        leftArrow = sStateDataPtr->currentProgress > 1 && sListMenuItems[scroll + row].id != LIST_CANCEL;
+        rightArrow = sStateDataPtr->currentProgress < gSaveBlock2Ptr->quests[questId].progress && sListMenuItems[scroll + row].id != LIST_CANCEL;
         QuestMenu_PlaceArrows(leftArrow, rightArrow);
 
         if (gMain.newKeys & DPAD_LEFT && sListMenuItems[scroll + row].id != LIST_CANCEL)
@@ -1101,15 +1103,15 @@ static void Task_QuestMenuMain(u8 taskId)
                 return;
             }
 
-            // if (sCurrentState >= sSideQuests[questId].states + 1)
-            //     sCurrentState = sSideQuests[questId].states;
-            sCurrentState--;
+            // if (sStateDataPtr->currentProgress >= sSideQuests[questId].states + 1)
+            //     sStateDataPtr->currentProgress = sSideQuests[questId].states;
+            sStateDataPtr->currentProgress--;
             FillWindowPixelBuffer(1, 0);
-            QuestMenu_AddTextPrinterParameterized(1, 2, sSideQuests[questId].events[gSaveBlock2Ptr->questStates[questId].eventList[sCurrentState - 1]].desc , 5, 3, 2, 0, 0, 3);
+            QuestMenu_AddTextPrinterParameterized(1, 2, sSideQuests[questId].events[gSaveBlock2Ptr->quests[questId].eventList[sStateDataPtr->currentProgress - 1]].desc , 5, 3, 2, 0, 0, 3);
             spriteTaskId = CreateTask(Task_ChangeSprite, 0);
             gTasks[spriteTaskId].data[0] = 0;
             gTasks[spriteTaskId].data[1] = questId;
-            gTasks[spriteTaskId].data[2] = sCurrentState;
+            gTasks[spriteTaskId].data[2] = sStateDataPtr->currentProgress;
             PlaySE(SE_SELECT);
             return;
         }
@@ -1122,18 +1124,18 @@ static void Task_QuestMenuMain(u8 taskId)
                 PlaySE(SE_HAZURE);
                 return;
             }
-            sCurrentState++;
-            // if (sCurrentState == gSaveBlock2Ptr->questStates[questId])
-            //     desc = sSideQuests[questId].desc[sCurrentState - 1].inProgress;
+            sStateDataPtr->currentProgress++;
+            // if (sStateDataPtr->currentProgress == gSaveBlock2Ptr->quests[questId])
+            //     desc = sSideQuests[questId].desc[sStateDataPtr->currentProgress - 1].inProgress;
             // else
-            //     desc = sSideQuests[questId].desc[sCurrentState - 1].completed;
-            desc = sSideQuests[questId].events[gSaveBlock2Ptr->questStates[questId].eventList[sCurrentState - 1]].desc;
+            //     desc = sSideQuests[questId].desc[sStateDataPtr->currentProgress - 1].completed;
+            desc = sSideQuests[questId].events[gSaveBlock2Ptr->quests[questId].eventList[sStateDataPtr->currentProgress - 1]].desc;
             FillWindowPixelBuffer(1, 0);
             QuestMenu_AddTextPrinterParameterized(1, 2, desc, 5, 3, 2, 0, 0, 3);
             spriteTaskId = CreateTask(Task_ChangeSprite, 0);
             gTasks[spriteTaskId].data[0] = 0;
             gTasks[spriteTaskId].data[1] = questId;
-            gTasks[spriteTaskId].data[2] = sCurrentState;
+            gTasks[spriteTaskId].data[2] = sStateDataPtr->currentProgress;
             PlaySE(SE_SELECT);
             return;
         }
@@ -1431,14 +1433,14 @@ s8 GetSetQuestFlag(u8 quest, u8 caseId)
     switch (caseId)
     {
     case VAR_GET_UNLOCKED:
-        return gSaveBlock2Ptr->questStates[quest].state > 0;
+        return gSaveBlock2Ptr->quests[quest].progress > 0;
     case VAR_SET_UNLOCKED:
-        gSaveBlock2Ptr->questStates[quest].state = 1;
+        gSaveBlock2Ptr->quests[quest].progress = 1;
         return 1;
     case VAR_GET_COMPLETED:
-        return gSaveBlock2Ptr->questStates[quest].completed;
+        return gSaveBlock2Ptr->quests[quest].completed;
     case VAR_SET_COMPLETED:
-        gSaveBlock2Ptr->questStates[quest].completed = 1;
+        gSaveBlock2Ptr->quests[quest].completed = 1;
         return 1;
     }
     
@@ -1474,13 +1476,13 @@ s8 GetSetQuestFlag(u8 quest, u8 caseId)
 static void DebugQuestMenu(void)
 {
     GetSetQuestFlag(SIDE_QUEST_1, VAR_SET_UNLOCKED);
-    gSaveBlock2Ptr->questStates[SIDE_QUEST_2].state = sSideQuests[SIDE_QUEST_2].eventCount;
-    gSaveBlock2Ptr->questStates[SIDE_QUEST_2].eventList[1] = 1;
+    gSaveBlock2Ptr->quests[SIDE_QUEST_2].progress = sSideQuests[SIDE_QUEST_2].eventCount;
+    gSaveBlock2Ptr->quests[SIDE_QUEST_2].eventList[1] = 1;
     // GetSetQuestFlag(SIDE_QUEST_2, VAR_SET_UNLOCKED);
     GetSetQuestFlag(SIDE_QUEST_3, VAR_SET_UNLOCKED);
-    gSaveBlock2Ptr->questStates[SIDE_QUEST_5].state = sSideQuests[SIDE_QUEST_5].eventCount;
-    gSaveBlock2Ptr->questStates[SIDE_QUEST_5].eventList[1] = 1;
-    gSaveBlock2Ptr->questStates[SIDE_QUEST_5].eventList[2] = 2;
+    gSaveBlock2Ptr->quests[SIDE_QUEST_5].progress = sSideQuests[SIDE_QUEST_5].eventCount;
+    gSaveBlock2Ptr->quests[SIDE_QUEST_5].eventList[1] = 1;
+    gSaveBlock2Ptr->quests[SIDE_QUEST_5].eventList[2] = 2;
     // GetSetQuestFlag(SIDE_QUEST_5, VAR_SET_UNLOCKED);
     // GetSetQuestFlag(SIDE_QUEST_5, VAR_SET_COMPLETED);    
     // SetActiveQuest(SIDE_QUEST_2);
@@ -1497,7 +1499,7 @@ void CopyQuestName(u8 *dst, u8 questId)
     StringCopy(dst, sSideQuests[questId].name);
 }
 
-void QuestMenu_CreateSideQuestPic(s32 itemIndex, u8 currentState)
+void QuestMenu_CreateSideQuestPic(s32 itemIndex, u8 currentProgress)
 {
     const struct ObjectEventGraphicsInfo* graphicsInfo;
     const struct SideQuestEvent* event;
@@ -1505,66 +1507,66 @@ void QuestMenu_CreateSideQuestPic(s32 itemIndex, u8 currentState)
 
     if (itemIndex == LIST_CANCEL)
     {
-        sCurrentPicType = PICTYPE_ITEM_ICON;
+        sStateDataPtr->currentPicType = PICTYPE_ITEM_ICON;
         FreeSpriteTilesByTag(TAG_ICON);
         FreeSpritePaletteByTag(TAG_ICON);
-        sSpriteId = AddItemIconSprite(TAG_ICON, TAG_ICON, ITEM_NONE);
-        if (sSpriteId != MAX_SPRITES)
+        sStateDataPtr->spriteId = AddItemIconSprite(TAG_ICON, TAG_ICON, ITEM_NONE);
+        if (sStateDataPtr->spriteId != MAX_SPRITES)
         {
-            gSprites[sSpriteId].pos2.x = 29;
-            gSprites[sSpriteId].pos2.y = 140;
+            gSprites[sStateDataPtr->spriteId].pos2.x = 29;
+            gSprites[sStateDataPtr->spriteId].pos2.y = 140;
         }
         return;
     }
 
-    event = &sSideQuests[itemIndex].events[gSaveBlock2Ptr->questStates[itemIndex].eventList[currentState - 1]];
+    event = &sSideQuests[itemIndex].events[gSaveBlock2Ptr->quests[itemIndex].eventList[currentProgress - 1]];
     switch (event->picType)
     {
     case PICTYPE_ITEM_ICON:
-        sCurrentPicType = PICTYPE_ITEM_ICON;
-        sSpriteId = AddItemIconSprite(TAG_ICON, TAG_ICON, event->picId);
-        if (sSpriteId != MAX_SPRITES)
+        sStateDataPtr->currentPicType = PICTYPE_ITEM_ICON;
+        sStateDataPtr->spriteId = AddItemIconSprite(TAG_ICON, TAG_ICON, event->picId);
+        if (sStateDataPtr->spriteId != MAX_SPRITES)
         {
-            gSprites[sSpriteId].pos2.x = 29;
-            gSprites[sSpriteId].pos2.y = 140;
+            gSprites[sStateDataPtr->spriteId].pos2.x = 29;
+            gSprites[sStateDataPtr->spriteId].pos2.y = 140;
         }
         break;
     case PICTYPE_OBJECT_EVENT:
-        sCurrentPicType = PICTYPE_OBJECT_EVENT;
+        sStateDataPtr->currentPicType = PICTYPE_OBJECT_EVENT;
         graphicsInfo = GetObjectEventGraphicsInfo(event->picId);
         if (graphicsInfo->height == 32)
             y = 132;
         else
             y = 140;
-        sSpriteId = AddPseudoObjectEvent(event->picId, SpriteCallbackDummy, 25, y, 0);
-        if (sSpriteId != MAX_SPRITES) 
+        sStateDataPtr->spriteId = AddPseudoObjectEvent(event->picId, SpriteCallbackDummy, 25, y, 0);
+        if (sStateDataPtr->spriteId != MAX_SPRITES) 
         {
-            gSprites[sSpriteId].oam.priority = 0;
+            gSprites[sStateDataPtr->spriteId].oam.priority = 0;
         }
         break;
     case PICTYPE_PARTY_ICON:
-        sCurrentPicType = PICTYPE_PARTY_ICON;
+        sStateDataPtr->currentPicType = PICTYPE_PARTY_ICON;
         LoadMonIconPalette(event->picId);
-        sSpriteId = CreateMonIcon(event->picId, SpriteCallbackDummy, 25, 135, 0, 0, FALSE);
+        sStateDataPtr->spriteId = CreateMonIcon(event->picId, SpriteCallbackDummy, 25, 135, 0, 0, FALSE);
         break;
     case PICTYPE_NONE:
-        sCurrentPicType = PICTYPE_NONE;
+        sStateDataPtr->currentPicType = PICTYPE_NONE;
         break;
     }
 }
 
 void QuestMenu_DestroySideQuestPic()
 {
-    if (sSpriteId == MAX_SPRITES)
+    if (sStateDataPtr->spriteId == MAX_SPRITES)
         return;
-    switch (sCurrentPicType)
+    switch (sStateDataPtr->currentPicType)
     {
     case PICTYPE_ITEM_ICON:
     case PICTYPE_OBJECT_EVENT:
-        DestroySpriteAndFreeResources(&gSprites[sSpriteId]);
+        DestroySpriteAndFreeResources(&gSprites[sStateDataPtr->spriteId]);
         break;
     case PICTYPE_PARTY_ICON:
-        FreeAndDestroyMonIconSprite(&gSprites[sSpriteId]);
+        FreeAndDestroyMonIconSprite(&gSprites[sStateDataPtr->spriteId]);
     case PICTYPE_NONE:
         break;
     }
@@ -1595,18 +1597,18 @@ static void QuestMenu_InitArrows(void)
 
     LoadCompressedSpriteSheet(&sheet);
     LoadSpritePalette(&palSheet);
-    sLeftArrowId = CreateSprite(&spriteTemp1, 6, 136, 0);
-    gSprites[sLeftArrowId].invisible = 1;
+    sStateDataPtr->leftArrowId = CreateSprite(&spriteTemp1, 6, 136, 0);
+    gSprites[sStateDataPtr->leftArrowId].invisible = 1;
     spriteTemp1.anims = sSpriteAnimTable_ScrollArrowFlip;
-    sRightArrowId = CreateSprite(&spriteTemp1, 43, 136, 0);
-    gSprites[sRightArrowId].invisible = 1;
+    sStateDataPtr->rightArrowId = CreateSprite(&spriteTemp1, 43, 136, 0);
+    gSprites[sStateDataPtr->rightArrowId].invisible = 1;
 }
 
 
 static void QuestMenu_PlaceArrows(bool8 leftArrow, bool8 rightArrow)
 {
-    gSprites[sLeftArrowId].invisible = !leftArrow;
-    gSprites[sRightArrowId].invisible = !rightArrow;
+    gSprites[sStateDataPtr->leftArrowId].invisible = !leftArrow;
+    gSprites[sStateDataPtr->rightArrowId].invisible = !rightArrow;
 }
 
 #undef tBldYBak
