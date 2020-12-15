@@ -1621,6 +1621,7 @@
 	.macro getquestevent questId:req, eventIndex:req
 	.byte 0xe5
 	.byte \questId
+	.byte \eventIndex
 	.endm
 
 	.macro getqueststate questId:req
